@@ -10,10 +10,10 @@ namespace Task_6.Testing
 {
     public class Tests
     {
-        string postsRout;
-        string usersRout;
-        string mediaType;
-        User checkingUser = new User();
+        private string postsRout;
+        private string usersRout;
+        private string mediaType;
+        private User checkingUser = new User();
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
@@ -31,17 +31,15 @@ namespace Task_6.Testing
         [Order(1)]
         public void GetAllPosts()
         {            
-            Log.Info(1, $"Get posts from \"{postsRout}\".");
-            var postsTask = APIUtils.GetQueueData<Post>(postsRout);
-            postsTask.Wait();
-            string postsCodeStatusMessage = $"The rout \"{postsRout}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
+            Log.Info($"Get posts from \"{postsRout}\".");
+            (HttpStatusCode StatusCode, string MediaType, Queue<Post> Posts) responsePosts = ApplicationApiRequests.GetQueueData<Post>(postsRout);            
+            string postsCodeStatusMessage = $"The rout \"{postsRout}\" has returned the status code {Convert.ToInt32(responsePosts.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
             Log.Info(postsCodeStatusMessage);
-            Assert.AreEqual(HttpStatusCode.OK, APIUtils.StatusCode, postsCodeStatusMessage);
-            string postsMediaTypeMessage = $"The rout \"{postsRout}\" has returned the actual media type {APIUtils.MediaType}. The expected media type is {mediaType}.";
+            Assert.AreEqual(HttpStatusCode.OK, responsePosts.StatusCode, postsCodeStatusMessage);            
+            string postsMediaTypeMessage = $"The rout \"{postsRout}\" has returned the actual media type {responsePosts.MediaType}. The expected media type is {mediaType}.";
             Log.Info(postsMediaTypeMessage);
-            Assert.IsTrue(APIUtils.MediaType.Equals(mediaType), postsMediaTypeMessage);
-            Queue<Post> posts = postsTask.Result;
-            bool isAscSort = Utilities.IsAscSort<Post>(posts);
+            Assert.IsTrue(responsePosts.MediaType.Equals(mediaType), postsMediaTypeMessage);            
+            bool isAscSort = Utilities.IsAscSort<Post>(responsePosts.Posts);
             Log.Info($"The function IsAscSort has returned \"{isAscSort}\".");
             Assert.IsTrue(isAscSort,
                 $"The rout \"{postsRout}\" has returned the post list not increase.");            
@@ -52,24 +50,22 @@ namespace Task_6.Testing
         public void GetPostPositiveTest()
         {            
             string postId = ConfigurationManager.TestData.GetStringParam("data:posts:getPositiveTest:postId");
-            Log.Info(2, $"Get the post whith has rout \"{postsRout}/{postId}\".");
-            var postTask = APIUtils.GetDataItem<Post>(postsRout, postId);
-            postTask.Wait();
-            string postStatusCodeMessage = $"The rout \"{postsRout}/{postId}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
+            Log.Info($"Get the post whith has rout \"{postsRout}/{postId}\".");
+            (HttpStatusCode StatusCode, string MediaType, Post Post) responsePost = ApplicationApiRequests.GetObject<Post>(postsRout, postId);            
+            string postStatusCodeMessage = $"The rout \"{postsRout}/{postId}\" has returned the status code {Convert.ToInt32(responsePost.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
             Log.Info(postStatusCodeMessage);
-            Assert.AreEqual(HttpStatusCode.OK, APIUtils.StatusCode, postStatusCodeMessage);
-            Post post = postTask.Result;
-            Log.Info($"Rout \"{postsRout}/{postId}\" has returned the object {post}.");
+            Assert.AreEqual(HttpStatusCode.OK, responsePost.StatusCode, postStatusCodeMessage);            
+            Log.Info($"Rout \"{postsRout}/{postId}\" has returned the object {responsePost.Post}.");
             int expectedUserId = ConfigurationManager.TestData.GetIntParam("data:posts:getPositiveTest:userId");
-            Assert.AreEqual(expectedUserId, post.UserId,
-                $"The expected userId={expectedUserId}. The post has actual userId={post.UserId}.");
+            Assert.AreEqual(expectedUserId, responsePost.Post.UserId,
+                $"The expected userId={expectedUserId}. The post has actual userId={responsePost.Post.UserId}.");
             int expectedPostId = ConfigurationManager.TestData.GetIntParam("data:posts:getPositiveTest:postId");
-            Assert.AreEqual(expectedPostId, post.PostId,
-                $"The expected postId={expectedPostId}. The post has actual postId={post.PostId}");
-            Assert.IsFalse(String.IsNullOrEmpty(post.Title),
-                $"The post when postId={post.PostId} has null value title.");
-            Assert.IsFalse(String.IsNullOrEmpty(post.Body),
-                $"The post when postId={post.PostId} has null value body.");           
+            Assert.AreEqual(expectedPostId, responsePost.Post.PostId,
+                $"The expected postId={expectedPostId}. The post has actual postId={responsePost.Post.PostId}");
+            Assert.IsFalse(String.IsNullOrEmpty(responsePost.Post.Title),
+                $"The post when postId={responsePost.Post.PostId} has null value title.");
+            Assert.IsFalse(String.IsNullOrEmpty(responsePost.Post.Body),
+                $"The post when postId={responsePost.Post.PostId} has null value body.");           
         }
 
         [Test]
@@ -77,14 +73,12 @@ namespace Task_6.Testing
         public void GetPostNegativeTest()
         {            
             string postId = ConfigurationManager.TestData.GetStringParam("data:posts:getNegativeTest:postId");
-            Log.Info(3, $"Get the post whith has rout \"{postsRout}/{postId}\".");
-            var postTask = APIUtils.GetDataItem<Post>(postsRout, postId);
-            postTask.Wait();
-            string postStatusCodeMessage = $"The rout \"{postsRout}/{postId}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.NotFound)}.";
+            Log.Info($"Get the post whith has rout \"{postsRout}/{postId}\".");
+            (HttpStatusCode StatusCode, string MediaType, Post Post) responsePost = ApplicationApiRequests.GetObject<Post>(postsRout, postId);            
+            string postStatusCodeMessage = $"The rout \"{postsRout}/{postId}\" has returned the status code {Convert.ToInt32(responsePost.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.NotFound)}.";
             Log.Info(postStatusCodeMessage);
-            Assert.AreEqual(HttpStatusCode.NotFound, APIUtils.StatusCode, postStatusCodeMessage);
-            Post post = postTask.Result;
-            Log.Info($"The rout \"{postsRout}/{postId}\" has returned the object {post}.");
+            Assert.AreEqual(HttpStatusCode.NotFound, responsePost.StatusCode, postStatusCodeMessage);            
+            Log.Info($"The rout \"{postsRout}/{postId}\" has returned the object {responsePost.Post}.");
             long? contentLenght = APIUtils.ContentLenght;
             Log.Info($"The rout \"{postsRout}/{postId}\" has returned the contentLenght = {contentLenght}.");
             Assert.AreEqual(2, contentLenght,
@@ -95,27 +89,19 @@ namespace Task_6.Testing
         [Order(4)]
         public void SendPostCreate()
         {            
-            Log.Info(4, $"Request POST to rout \"{postsRout}\".");
-            Post expectedPost = new Post();
-            expectedPost.UserId = ConfigurationManager.TestData.GetIntParam("data:posts:postPositiveTest:userId");
-            expectedPost.Title = Utilities.GetRandomString(10);
-            expectedPost.Body = Utilities.GetRandomString(100);
-            Log.Info($"The expected object Post has been created {expectedPost}.");
-            Log.Info($"Send POST request.");
-            var createdPostTask = APIUtils.CreatePostDataItem<Post>(postsRout, expectedPost);
-            createdPostTask.Wait();
-            string createPostStatusCodeMessage = $"The server on the rout \"{postsRout}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)} on POST request. The expected status code is {Convert.ToInt32(HttpStatusCode.Created)}.";
+            Log.Info($"Request POST to rout \"{postsRout}\".");            
+            (HttpStatusCode StatusCode, Post ExpectedPost, Post ActualPost) responseCreatedPost = ApplicationApiRequests.CreatePost(postsRout, ConfigurationManager.TestData.GetIntParam("data:posts:postPositiveTest:userId"));
+            string createPostStatusCodeMessage = $"The server on the rout \"{postsRout}\" has returned the status code {Convert.ToInt32(responseCreatedPost.StatusCode)} on POST request. The expected status code is {Convert.ToInt32(HttpStatusCode.Created)}.";
             Log.Info(createPostStatusCodeMessage);
-            Assert.AreEqual(HttpStatusCode.Created, APIUtils.StatusCode, createPostStatusCodeMessage);
-            Post createdPost = createdPostTask.Result;
-            Log.Info($"POST response on the rout \"{postsRout}\" has returned the object {expectedPost}.");
-            Assert.AreEqual(expectedPost.UserId, createdPost.UserId,
-                $"POST response has returned the actual userId = {createdPost.UserId}. The expected userId = {expectedPost.UserId}.");
-            Assert.AreEqual(expectedPost.Title,createdPost.Title,
-                $"POST response has returned the actual Title = {createdPost.Title}. The expected Title = {expectedPost.Title}.");
-            Assert.AreEqual(expectedPost.Body, createdPost.Body,
-                $"POST response has returned the actual Body = {createdPost.Body}. The expected Body = {expectedPost.Body}.");
-            Assert.NotNull(createdPost.PostId,
+            Assert.AreEqual(HttpStatusCode.Created, responseCreatedPost.StatusCode, createPostStatusCodeMessage);            
+            Log.Info($"POST response on the rout \"{postsRout}\" has returned the object {responseCreatedPost.ExpectedPost}.");
+            Assert.AreEqual(responseCreatedPost.ExpectedPost.UserId, responseCreatedPost.ActualPost.UserId,
+                $"POST response has returned the actual userId = {responseCreatedPost.ActualPost.UserId}. The expected userId = {responseCreatedPost.ExpectedPost.UserId}.");
+            Assert.AreEqual(responseCreatedPost.ExpectedPost.Title, responseCreatedPost.ActualPost.Title,
+                $"POST response has returned the actual Title = {responseCreatedPost.ActualPost.Title}. The expected Title = {responseCreatedPost.ExpectedPost.Title}.");
+            Assert.AreEqual(responseCreatedPost.ExpectedPost.Body, responseCreatedPost.ActualPost.Body,
+                $"POST response has returned the actual Body = {responseCreatedPost.ActualPost.Body}. The expected Body = {responseCreatedPost.ExpectedPost.Body}.");
+            Assert.NotNull(responseCreatedPost.ActualPost.PostId,
                 $"POST response has returned the actual postId is empty.");            
         }
 
@@ -123,18 +109,16 @@ namespace Task_6.Testing
         [Order(5)]
         public void GetUserPositiveTest()
         {
-            Log.Info(5, $"Get users from \"{usersRout}\".");
-            var usersTask = APIUtils.GetQueueData<User>(usersRout);
-            usersTask.Wait();
-            string usersStatusCodeMessage = $"The rout \"{usersRout}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
+            Log.Info($"Get users from \"{usersRout}\".");            
+            (HttpStatusCode StatusCode, string MediaType, Queue<User> Users) responseUsers = ApplicationApiRequests.GetQueueData<User>(usersRout);            
+            string usersStatusCodeMessage = $"The rout \"{usersRout}\" has returned the status code {Convert.ToInt32(responseUsers.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
             Log.Info(usersStatusCodeMessage);
-            Assert.AreEqual(HttpStatusCode.OK, APIUtils.StatusCode, usersStatusCodeMessage);
-            string userMediaType = $"The rout \"{usersRout}\" has returned the actual media type {APIUtils.MediaType}. The expected media type is {mediaType}.";
+            Assert.AreEqual(HttpStatusCode.OK, responseUsers.StatusCode, usersStatusCodeMessage);
+            string userMediaType = $"The rout \"{usersRout}\" has returned the actual media type {responseUsers.MediaType}. The expected media type is {mediaType}.";
             Log.Info(userMediaType);
-            Assert.IsTrue(APIUtils.MediaType.Equals(mediaType), userMediaType);
-            User expectedUser = ConfigurationManager.TestData.GetObjectParam<User>("data:users:getPositiveTest:user");
-            Queue<User> users = usersTask.Result;
-            checkingUser = users.Where<User>(chosenUser => chosenUser.UserId == expectedUser.UserId).FirstOrDefault();            
+            Assert.IsTrue(responseUsers.MediaType.Equals(mediaType), userMediaType);
+            User expectedUser = ConfigurationManager.TestData.GetObjectParam<User>("data:users:getPositiveTest:user");            
+            checkingUser = responseUsers.Users.Where<User>(chosenUser => chosenUser.UserId == expectedUser.UserId).FirstOrDefault();            
             string chosenUserMessage = $"The rout \"{usersRout}\" has returned object users list where was object user =\"{checkingUser}\". The expected user is \"{expectedUser}\".";
             Log.Info(chosenUserMessage);
             Assert.AreEqual(expectedUser, checkingUser, chosenUserMessage);
@@ -145,17 +129,14 @@ namespace Task_6.Testing
         public void CheckUserGetPreviousStep()
         {            
             string userId = ConfigurationManager.TestData.GetStringParam("data:users:getPositiveTest:user:userId");
-            Log.Info(6, $"Get user from the rout \"{usersRout}/{userId}\".");
-            var userTask = APIUtils.GetDataItem<User>(usersRout,userId);
-            userTask.Wait();
-            string statusCodeMessage = $"The rout \"{usersRout}/{userId}\" has returned the status code {Convert.ToInt32(APIUtils.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
+            Log.Info($"Get user from the rout \"{usersRout}/{userId}\".");
+            (HttpStatusCode StatusCode, string MediaType, User User) responseUser = ApplicationApiRequests.GetObject<User>(usersRout, userId);            
+            string statusCodeMessage = $"The rout \"{usersRout}/{userId}\" has returned the status code {Convert.ToInt32(responseUser.StatusCode)}. The expected status code: {Convert.ToInt32(HttpStatusCode.OK)}.";
             Log.Info(statusCodeMessage);
-            Assert.AreEqual(HttpStatusCode.OK, APIUtils.StatusCode,
-               statusCodeMessage);
-            User actualUser = userTask.Result;
-            string actualUserMessage = $"The rout \"{usersRout}/{userId}\" has returned object {actualUser}. The expected object {checkingUser}.";
+            Assert.AreEqual(HttpStatusCode.OK, responseUser.StatusCode, statusCodeMessage);            
+            string actualUserMessage = $"The rout \"{usersRout}/{userId}\" has returned object {responseUser.User}. The expected object {checkingUser}.";
             Log.Info(actualUserMessage);
-            Assert.AreEqual(checkingUser, actualUser, actualUserMessage);
+            Assert.AreEqual(checkingUser, responseUser.User, actualUserMessage);
         }
 
         [TearDown]
