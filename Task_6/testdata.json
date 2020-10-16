@@ -1,0 +1,47 @@
+{
+  "data": {
+    "posts": {
+      "rout": "/posts",
+      "getPositiveTest": {
+        "postId": 99,
+        "userId": 10
+      },
+      "getNegativeTest": {
+        "postId": 150
+      },
+      "postPositiveTest": {
+        "userId": 1
+      }
+    },
+    "users": {
+      "rout": "/users",
+      "getPositiveTest": {
+        "user": {
+          "userId": 5,
+          "name": "Chelsey Dietrich",
+          "username": "Kamren",
+          "email": "Lucio_Hettinger@annie.ca",
+          "address": {
+            "street": "Skiles Walks",
+            "suite": "Suite 351",
+            "city": "Roscoeview",
+            "zipcode": 33263,
+            "geo": {
+              "lat": -31.8129,
+              "lng": 62.5342
+            }
+          },
+          "phone": "(254)954-1289",
+          "website": "demarco.info",
+          "company": {
+            "name": "Keebler LLC",
+            "catchPhrase": "User-centric fault-tolerant solution",
+            "bs": "revolutionize end-to-end systems"
+          }
+        }
+
+      }
+    }
+  },
+  "mediaType": "application/json"
+}

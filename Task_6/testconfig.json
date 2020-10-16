@@ -1,0 +1,7 @@
+{
+  "httpClient": {
+    "uri": "https://jsonplaceholder.typicode.com/",
+    "mediaType": "application/json",
+    "userAgent": "Test REST API"
+  }
+}
